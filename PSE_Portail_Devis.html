@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSE+ · Demande de Devis</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --vert: #7DC52B;
+    --vert-fonce: #5a9a1e;
+    --vert-clair: #e8f7d5;
+    --noir: #0f1a00;
+    --gris: #f7faf2;
+    --blanc: #ffffff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--gris);
+    color: var(--noir);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--noir);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo-wrap { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    background: var(--vert);
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    padding: 6px 16px;
+    border-radius: 6px;
+    letter-spacing: 2px;
+  }
+  .logo-name { color: #fff; font-size: 14px; font-weight: 500; }
+  .logo-tagline { color: rgba(255,255,255,0.45); font-size: 11px; margin-top: 1px; }
+  .header-contact { color: var(--vert); font-size: 12px; font-weight: 500; }
+  
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--noir) 0%, #1a3300 100%);
+    padding: 50px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: -80px;
+    transform: translateX(-50%);
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(125,197,43,0.15) 0%, transparent 70%);
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(38px, 8vw, 64px);
+    color: #fff;
+    letter-spacing: 1px;
+    line-height: 1;
+    position: relative;
+  }
+  .hero h1 span { color: var(--vert); }
+  .hero p {
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    margin-top: 10px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+    position: relative;
+  }
+  .badges {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    position: relative;
+  }
+  .badge {
+    background: rgba(125,197,43,0.15);
+    border: 1px solid rgba(125,197,43,0.3);
+    color: var(--vert);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+  }
+
+  /* FORM */
+  .form-container {
+    max-width: 680px;
+    margin: -20px auto 40px;
+    padding: 0 16px;
+  }
+  .form-card {
+    background: var(--blanc);
+    border-radius: 20px;
+    padding: 36px 36px 32px;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.10);
+    border: 1px solid rgba(125,197,43,0.12);
+  }
+  .form-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: var(--noir);
+    margin-bottom: 6px;
+  }
+  .form-subtitle { font-size: 13px; color: #888; margin-bottom: 28px; }
+  
+  /* FIELD GROUPS */
+  .field-group { margin-bottom: 20px; }
+  .field-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #444;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+  }
+  .field-group label .req { color: var(--vert); margin-left: 2px; }
+  
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  
+  input[type=text], input[type=email], input[type=tel], input[type=date], input[type=number],
+  select, textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid #e8f0dc;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    color: var(--noir);
+    background: var(--gris);
+    transition: all 0.2s;
+    outline: none;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--vert);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(125,197,43,0.12);
+  }
+  textarea { resize: vertical; min-height: 80px; }
+  
+  /* ARTICLES SECTION */
+  .articles-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: var(--vert-fonce);
+    margin: 24px 0 14px;
+    padding-top: 20px;
+    border-top: 1px dashed #daedc1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .article-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .article-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--gris);
+    border: 1.5px solid #e5f0d5;
+    border-radius: 10px;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .article-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--noir);
+    flex: 1;
+  }
+  .article-price {
+    font-size: 11px;
+    color: var(--vert-fonce);
+    font-weight: 600;
+    background: var(--vert-clair);
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .article-qty {
+    width: 70px !important;
+    min-width: 70px;
+    text-align: center;
+    padding: 8px 10px !important;
+  }
+  
+  /* VAISSELLE SECTION */
+  .vais-group {
+    background: var(--gris);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1.5px solid #e5f0d5;
+  }
+  .vais-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #444;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .vais-items { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .vais-item { text-align: center; }
+  .vais-label { font-size: 11px; color: #666; margin-bottom: 4px; }
+  .vais-item input { text-align: center; font-size: 13px; }
+
+  /* DIVIDER */
+  .section-divider {
+    border: none;
+    border-top: 1px dashed #daedc1;
+    margin: 22px 0;
+  }
+
+  /* SUBMIT */
+  .submit-wrap { margin-top: 28px; }
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--vert);
+    color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .submit-btn:hover {
+    background: var(--vert-fonce);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(90,154,30,0.35);
+  }
+  .submit-note {
+    text-align: center;
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+  
+  /* SUCCESS */
+  .success-card {
+    display: none;
+    background: linear-gradient(135deg, #1a3300, var(--noir));
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    color: #fff;
+  }
+  .success-card.show { display: block; }
+  .success-icon { font-size: 56px; margin-bottom: 16px; }
+  .success-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 1px;
+    color: var(--vert);
+    margin-bottom: 10px;
+  }
+  .success-desc { font-size: 14px; opacity: 0.7; line-height: 1.7; }
+  
+  /* FOOTER */
+  footer {
+    background: var(--noir);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--vert);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .footer-info { color: rgba(255,255,255,0.4); font-size: 12px; line-height: 2; }
+  .footer-info a { color: var(--vert); text-decoration: none; }
+
+  @media (max-width: 520px) {
+    .form-card { padding: 22px 18px; }
+    .row-2 { grid-template-columns: 1fr; }
+    .article-grid { grid-template-columns: 1fr; }
+    .vais-items { grid-template-columns: 1fr 1fr; }
+    header { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo">PSE+</div>
+    <div>
+      <div class="logo-name">Piment Sweet Events +</div>
+      <div class="logo-tagline">Location de matériel événementiel · Guadeloupe</div>
+    </div>
+  </div>
+  <div class="header-contact">📞 +590 690 64 52 51</div>
+</header>
+
+<div class="hero">
+  <h1>VOTRE ÉVÉNEMENT<br>MÉRITE LE <span>MEILLEUR.</span></h1>
+  <p>Remplissez ce formulaire et recevez votre devis personnalisé sous 24h. Livraison et installation en Guadeloupe.</p>
+  <div class="badges">
+    <span class="badge">🎪 Tentes & Chapiteaux</span>
+    <span class="badge">🍽 Vaisselle complète</span>
+    <span class="badge">🪑 Tables & Chaises</span>
+    <span class="badge">🍾 Mobilier lounge</span>
+  </div>
+</div>
+
+<div class="form-container">
+  
+  <!-- FORM -->
+  <div class="form-card" id="formCard">
+    <div class="form-title">📋 DEMANDE DE DEVIS</div>
+    <div class="form-subtitle">Tous les champs marqués d'un * sont obligatoires. Réponse garantie sous 24h.</div>
+    
+    <form id="devisForm">
+      
+      <!-- CONTACT -->
+      <div class="row-2">
+        <div class="field-group">
+          <label>Nom complet <span class="req">*</span></label>
+          <input type="text" name="nom" placeholder="Marie Dupont" required>
+        </div>
+        <div class="field-group">
+          <label>Téléphone <span class="req">*</span></label>
+          <input type="tel" name="telephone" placeholder="+590 6XX XX XX XX" required>
+        </div>
+      </div>
+      
+      <div class="field-group">
+        <label>Email <span class="req">*</span></label>
+        <input type="email" name="email" placeholder="votre@email.com" required>
+      </div>
+
+      <hr class="section-divider">
+      
+      <!-- EVENT -->
+      <div class="row-2">
+        <div class="field-group">
+          <label>Date de l'événement <span class="req">*</span></label>
+          <input type="date" name="date_evenement" required>
+        </div>
+        <div class="field-group">
+          <label>Nombre de personnes</label>
+          <input type="number" name="nb_personnes" placeholder="Ex: 150" min="1">
+        </div>
+      </div>
+      
+      <div class="row-2">
+        <div class="field-group">
+          <label>Type d'événement <span class="req">*</span></label>
+          <select name="type_evenement" required>
+            <option value="">— Choisir —</option>
+            <option>Mariage</option>
+            <option>Anniversaire</option>
+            <option>Baptême</option>
+            <option>Soirée d'entreprise</option>
+            <option>Conférence / Séminaire</option>
+            <option>Festival / Concert</option>
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Commune / Lieu</label>
+          <input type="text" name="lieu" placeholder="Ex: Pointe-à-Pitre, salle X">
+        </div>
+      </div>
+
+      <!-- ARTICLES -->
+      <div class="articles-title">🪑 MOBILIER & STRUCTURE</div>
+      
+      <div class="article-grid">
+        <div class="article-item">
+          <div>
+            <div class="article-label">🪑 Chaises</div>
+            <div class="article-price">1,20 € / unité</div>
+          </div>
+          <input type="number" name="chaises" class="article-qty" placeholder="0" min="0">
+        </div>
+        <div class="article-item">
+          <div>
+            <div class="article-label">🪵 Tables</div>
+            <div class="article-price">10 € / unité</div>
+          </div>
+          <input type="number" name="tables" class="article-qty" placeholder="0" min="0">
+        </div>
+        <div class="article-item">
+          <div>
+            <div class="article-label">🧍 Mange-debout</div>
+            <div class="article-price">10 € / unité</div>
+          </div>
+          <input type="number" name="mange_debout" class="article-qty" placeholder="0" min="0">
+        </div>
+        <div class="article-item">
+          <div>
+            <div class="article-label">🛋 Salon (4 fauteuils + table)</div>
+            <div class="article-price">45 € / set</div>
+          </div>
+          <input type="number" name="salon" class="article-qty" placeholder="0" min="0">
+        </div>
+        <div class="article-item">
+          <div>
+            <div class="article-label">⛺ Tente</div>
+            <div class="article-price">150 € / unité</div>
+          </div>
+          <input type="number" name="tentes" class="article-qty" placeholder="0" min="0">
+        </div>
+        <div class="article-item">
+          <div>
+            <div class="article-label">🪵 Plancher</div>
+            <div class="article-price">12 € / m²</div>
+          </div>
+          <input type="number" name="plancher_m2" class="article-qty" placeholder="m²" min="0">
+        </div>
+      </div>
+      
+      <!-- NAPPES -->
+      <div class="article-item" style="margin-bottom: 10px;">
+        <div>
+          <div class="article-label">🧼 Nappes</div>
+          <div class="article-price">15 € / unité</div>
+        </div>
+        <input type="number" name="nappes" class="article-qty" placeholder="0" min="0">
+      </div>
+
+      <!-- VAISSELLE -->
+      <div class="articles-title">🍽 VAISSELLE (0,45 € / pièce)</div>
+      
+      <div class="vais-group">
+        <div class="vais-group-title">Couverts</div>
+        <div class="vais-items">
+          <div class="vais-item">
+            <div class="vais-label">🍴 Fourchettes</div>
+            <input type="number" name="fourchettes" placeholder="0" min="0">
+          </div>
+          <div class="vais-item">
+            <div class="vais-label">🔪 Couteaux</div>
+            <input type="number" name="couteaux" placeholder="0" min="0">
+          </div>
+          <div class="vais-item">
+            <div class="vais-label">🥄 Petites cuillères</div>
+            <input type="number" name="petites_cuilleres" placeholder="0" min="0">
+          </div>
+          <div class="vais-item">
+            <div class="vais-label">🥄 Grandes cuillères</div>
+            <input type="number" name="grandes_cuilleres" placeholder="0" min="0">
+          </div>
+        </div>
+      </div>
+      
+      <div class="vais-group">
+        <div class="vais-group-title">Verres & Accessoires</div>
+        <div class="vais-items">
+          <div class="vais-item">
+            <div class="vais-label">🥛 Verres à eau</div>
+            <input type="number" name="verres_eau" placeholder="0" min="0">
+          </div>
+          <div class="vais-item">
+            <div class="vais-label">🍷 Verres à vin</div>
+            <input type="number" name="verres_vin" placeholder="0" min="0">
+          </div>
+          <div class="vais-item">
+            <div class="vais-label">🥂 Verres à champ.</div>
+            <input type="number" name="verres_champagne" placeholder="0" min="0">
+          </div>
+          <div class="vais-item">
+            <div class="vais-label">🍾 Seaux champagne</div>
+            <input type="number" name="seaux_champagne" placeholder="0" min="0">
+          </div>
+        </div>
+        <div style="font-size: 11px; color: #aaa; margin-top: 8px; text-align: right;">* Seaux à champagne : 1 € / unité</div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- NOTES -->
+      <div class="field-group">
+        <label>Informations complémentaires</label>
+        <textarea name="notes" placeholder="Thème de l'événement, demandes spéciales, contraintes de livraison, questions..."></textarea>
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="submit-wrap">
+        <button type="submit" class="submit-btn" id="submitBtn">
+          ENVOYER MA DEMANDE DE DEVIS →
+        </button>
+        <div class="submit-note">
+          🔒 Vos données restent confidentielles · Réponse sous 24h<br>
+          Thierry Arthur · Thierryarthur971@gmail.com · +590 690 64 52 51
+        </div>
+      </div>
+      
+    </form>
+
+    <!-- SUCCESS STATE -->
+    <div class="success-card" id="successCard">
+      <div class="success-icon">🎉</div>
+      <div class="success-title">DEMANDE ENVOYÉE !</div>
+      <div class="success-desc">
+        Merci ! Votre demande a bien été transmise à PSE+.<br>
+        <strong style="color: var(--vert);">Thierry vous contactera sous 24h</strong> pour finaliser votre devis.<br><br>
+        📞 Besoin urgent ? Appelez directement :<br>
+        <strong style="color: #fff; font-size: 18px;">+590 690 64 52 51</strong>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">PSE+</div>
+  <div class="footer-info">
+    Piment Sweet Events — Location de matériel événementiel en Guadeloupe<br>
+    <a href="mailto:Thierryarthur971@gmail.com">Thierryarthur971@gmail.com</a> · 
+    <a href="tel:+590690645251">+590 690 64 52 51</a><br>
+    Leader sur tous les grands événements de Guadeloupe 🌴
+  </div>
+</footer>
+
+<script>
+document.getElementById('devisForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const form = e.target;
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'Envoi en cours...';
+  btn.disabled = true;
+
+  // Collect all form data
+  const data = new FormData(form);
+  const fields = {};
+  for (let [k, v] of data.entries()) { if (v) fields[k] = v; }
+  
+  // Build readable email body
+  const articleLabels = {
+    chaises: 'Chaises (1,20€)',
+    tables: 'Tables (10€)',
+    mange_debout: 'Mange-debout (10€)',
+    salon: 'Salons - set (45€)',
+    tentes: 'Tentes (150€)',
+    plancher_m2: 'Plancher (12€/m²)',
+    nappes: 'Nappes (15€)',
+    fourchettes: 'Fourchettes (0,45€)',
+    couteaux: 'Couteaux (0,45€)',
+    petites_cuilleres: 'Petites cuillères (0,45€)',
+    grandes_cuilleres: 'Grandes cuillères (0,45€)',
+    verres_eau: 'Verres à eau (0,45€)',
+    verres_vin: 'Verres à vin (0,45€)',
+    verres_champagne: 'Verres à champagne (0,45€)',
+    seaux_champagne: 'Seaux à champagne (1€)'
+  };
+  
+  let articlesList = '';
+  for (let [key, label] of Object.entries(articleLabels)) {
+    if (fields[key] && parseInt(fields[key]) > 0) {
+      articlesList += `• ${label} : ${fields[key]}\n`;
+    }
+  }
+  if (!articlesList) articlesList = '(Aucun article précisé)';
+
+  const subject = `[PSE+] Nouvelle demande de devis - ${fields.nom || 'Client'} - ${fields.date_evenement || 'Date à préciser'}`;
+  
+  const body = `NOUVELLE DEMANDE DE DEVIS — PSE+
+======================================
+
+📋 COORDONNÉES CLIENT
+Nom : ${fields.nom || '-'}
+Téléphone : ${fields.telephone || '-'}
+Email : ${fields.email || '-'}
+
+🎉 ÉVÉNEMENT
+Date : ${fields.date_evenement || '-'}
+Type : ${fields.type_evenement || '-'}
+Lieu : ${fields.lieu || '-'}
+Nombre de personnes : ${fields.nb_personnes || '-'}
+
+📦 ARTICLES DEMANDÉS
+${articlesList}
+💬 NOTES COMPLÉMENTAIRES
+${fields.notes || 'Aucune note'}
+
+======================================
+Demande reçue via le portail devis PSE+
+Répondre à : ${fields.email || '-'}`;
+
+  // Use mailto as primary method (works without backend)
+  const mailtoLink = `mailto:Thierryarthur971@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  
+  // Also try Formspree if configured (replace YOUR_FORM_ID with actual ID)
+  const FORMSPREE_ID = 'YOUR_FORM_ID'; // Replace with actual Formspree form ID
+  
+  if (FORMSPREE_ID !== 'YOUR_FORM_ID') {
+    // Send via Formspree
+    fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ ...fields, _subject: subject })
+    }).then(r => {
+      if (r.ok) {
+        showSuccess();
+      } else {
+        window.location.href = mailtoLink;
+        showSuccess();
+      }
+    }).catch(() => {
+      window.location.href = mailtoLink;
+      showSuccess();
+    });
+  } else {
+    // Fallback: open mail client
+    window.location.href = mailtoLink;
+    setTimeout(showSuccess, 800);
+  }
+});
+
+function showSuccess() {
+  document.getElementById('devisForm').style.display = 'none';
+  document.getElementById('successCard').classList.add('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
