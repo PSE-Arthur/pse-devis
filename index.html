@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PSE+ · Demande de Devis</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --vert: #7DC52B;
@@ -167,6 +168,77 @@
     .dv-sig { grid-template-columns:1fr; }
     .row2 { grid-template-columns:1fr; }
   }
+
+  /* SIGNATURE ON DEVIS */
+  .dv-sig-canvas-wrap { margin-top:12px; }
+  .dv-sig-canvas {
+    width:100%; height:130px;
+    border:2px solid #e0ecd4; border-radius:12px;
+    background:var(--gris); cursor:crosshair;
+    touch-action:none; display:block;
+  }
+  .dv-sig-canvas.signed { border-color:var(--vert); background:#fff; }
+  .dv-sig-clear { margin-top:6px; background:transparent; border:1px solid #ddd; border-radius:8px; padding:5px 14px; font-size:11px; color:#aaa; cursor:pointer; }
+
+  /* BPA CHECKBOX */
+  .bpa-wrap {
+    display:flex; align-items:flex-start; gap:14px;
+    background:#e8f7d5; border:2px solid var(--vert);
+    border-radius:12px; padding:14px; margin-top:14px; cursor:pointer;
+  }
+  .bpa-box {
+    width:26px; height:26px; border-radius:7px;
+    border:2px solid var(--vert); background:#fff;
+    flex-shrink:0; display:flex; align-items:center;
+    justify-content:center; font-size:15px; font-weight:700;
+    transition:all .15s; margin-top:1px;
+  }
+  .bpa-box.on { background:var(--vert); border-color:var(--vert); color:#fff; }
+  .bpa-text { font-size:13px; font-weight:600; color:var(--vert-f); line-height:1.5; }
+
+  /* BPA SUBMIT BUTTON */
+  .bpa-btn {
+    width:100%; padding:16px; border:none; border-radius:14px;
+    font-family:"Bebas Neue",sans-serif; font-size:20px;
+    letter-spacing:2px; cursor:not-allowed; transition:all .2s;
+    background:#ccc; color:#fff; margin-top:12px;
+  }
+  .bpa-btn.ready { background:var(--vert); cursor:pointer; box-shadow:0 6px 24px rgba(90,154,30,.35); }
+  .bpa-btn.ready:active { background:var(--vert-f); }
+
+  /* SUCCESS SCREEN */
+  .success-overlay {
+    display:none; position:fixed; inset:0;
+    background:linear-gradient(135deg,var(--noir),#1a3300);
+    z-index:9999; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .success-overlay.show { display:flex; }
+  .success-card {
+    background:#fff; border-radius:20px;
+    padding:32px 28px; max-width:440px; width:100%;
+    text-align:center;
+  }
+  .suc-icon { font-size:60px; margin-bottom:14px; }
+  .suc-title { font-family:"Bebas Neue",sans-serif; font-size:32px; letter-spacing:1px; color:var(--vert); margin-bottom:8px; }
+  .suc-desc { font-size:13px; color:#666; line-height:1.8; margin-bottom:20px; }
+  .suc-detail { background:var(--gris); border-radius:10px; padding:14px; margin-bottom:16px; font-size:12px; color:#555; line-height:1.9; text-align:left; }
+  .suc-print { width:100%; padding:14px; background:var(--vert); color:#fff; border:none; border-radius:12px; font-family:"Bebas Neue",sans-serif; font-size:18px; letter-spacing:1px; cursor:pointer; margin-bottom:8px; }
+  .suc-new { width:100%; padding:12px; background:transparent; border:1.5px solid #ddd; border-radius:12px; color:#888; font-size:13px; cursor:pointer; }
+
+  /* SENDING STATE */
+  .sending-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.7); z-index:10000;
+    align-items:center; justify-content:center;
+  }
+  .sending-overlay.show { display:flex; }
+  .sending-card { background:#fff; border-radius:16px; padding:28px 32px; text-align:center; }
+  .sending-icon { font-size:40px; margin-bottom:12px; animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .sending-text { font-family:"Bebas Neue",sans-serif; font-size:20px; letter-spacing:1px; color:var(--noir); }
+  .sending-sub { font-size:12px; color:#888; margin-top:4px; }
+
 </style>
 </head>
 <body>
@@ -354,19 +426,45 @@
         </div>
       </div>
 
-      <!-- SIGNATURE -->
-      <div class="dv-section">
-        <div class="dv-section-title">ACCEPTATION DU DEVIS</div>
-        <div class="dv-sig">
-          <div class="dv-sig-box">
-            <div class="dv-sig-label">Signature PSE+ — Thierry Arthur</div>
-          </div>
-          <div class="dv-sig-box">
-            <div class="dv-sig-label">Signature client · Mention « Bon pour accord »</div>
+      <!-- SIGNATURE INTERACTIVE -->
+      <div class="dv-section" id="bpaSection">
+        <div class="dv-section-title">✍️ ACCEPTATION — BON POUR ACCORD</div>
+
+        <div style="font-size:13px;color:#666;margin-bottom:14px;line-height:1.6;">
+          Signez ci-dessous pour confirmer votre commande. Vous recevrez une copie du devis accepté par email.
+        </div>
+
+        <!-- Signature canvas -->
+        <div style="font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+          Votre signature *
+        </div>
+        <canvas class="dv-sig-canvas" id="bpaCanvas"></canvas>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+          <button class="dv-sig-clear" onclick="clearBpa()">✕ Effacer</button>
+          <div style="font-size:11px;color:#aaa;">Signez avec votre doigt ou souris</div>
+        </div>
+        <div id="sigHint" style="display:none;color:#e74c3c;font-size:12px;font-weight:600;margin-top:6px;">
+          ✋ La signature est obligatoire pour valider.
+        </div>
+
+        <!-- BPA Checkbox -->
+        <div class="bpa-wrap" onclick="toggleBpa()" id="bpaCheckWrap">
+          <div class="bpa-box" id="bpaBox"></div>
+          <div class="bpa-text">
+            Je soussigné(e) <span id="bpaClientName">—</span>, accepte le devis <span id="bpaRef">—</span>
+            d'un montant de <span id="bpaMontant">—</span>. Je confirme avoir pris connaissance des conditions générales.
+            <strong>Bon pour accord.</strong>
           </div>
         </div>
-        <div style="font-size:11px;color:#aaa;margin-top:10px;text-align:center;">
-          À retourner signé par email à Thierryarthur971@gmail.com ou WhatsApp au +590 690 64 52 51
+
+        <!-- Submit BPA -->
+        <button class="bpa-btn" id="bpaBtn" onclick="validerBpa()">
+          ✓ CONFIRMER MON BON POUR ACCORD
+        </button>
+
+        <div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px;line-height:1.7;">
+          🔒 Votre devis signé sera envoyé automatiquement à votre email<br>
+          et une notification sera transmise à PSE+ immédiatement.
         </div>
       </div>
 
@@ -383,8 +481,9 @@
 
     <!-- ACTION BAR -->
     <div class="dv-action-bar">
-      <button class="dv-print-btn" onclick="imprimerDevis()">🖨 IMPRIMER / SAUVEGARDER PDF</button>
-      <button class="dv-close-btn" onclick="fermerDevis()">✕ Fermer</button>
+      <button class="dv-print-btn" onclick="scrollToBpa()">✍️ SIGNER & VALIDER</button>
+      <button class="dv-close-btn" onclick="imprimerDevis()">🖨 PDF</button>
+      <button class="dv-close-btn" onclick="fermerDevis()">✕</button>
     </div>
 
   </div><!-- /devis-doc -->
@@ -393,6 +492,23 @@
 
 <script>
 const FORMSPREE = 'https://formspree.io/f/xzdoyalo';
+
+// ── EMAILJS CONFIG ──
+// 1. Créer un compte sur emailjs.com
+// 2. Créer un service email (Gmail) → copier le Service ID
+// 3. Créer un template → copier le Template ID
+// 4. Copier la Public Key
+const EMAILJS_PUBLIC_KEY  = '5Ysvf-1GHcn7i6eUj';   // ← Remplacer
+const EMAILJS_SERVICE_ID  = 'service_fg8241i';   // ← Remplacer
+const EMAILJS_TEMPLATE_ID = 'template_sc9jhja';  // ← Remplacer
+const EMAILJS_CONFIGURED  = EMAILJS_PUBLIC_KEY !== 'VOTRE_PUBLIC_KEY';
+if (EMAILJS_CONFIGURED) emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// ── DEVIS STATE ──
+let devisData = {};
+let bpaChecked = false;
+let bpaHasSig  = false;
+let bpaCtx, bpaDrawing = false;
 
 // ── CATALOGUE ──
 const CATALOGUE = {
@@ -567,9 +683,26 @@ function genererDevis() {
   document.getElementById('dvSubtotal').textContent = fmt(total);
   document.getElementById('dvTotal').textContent = fmt(total);
 
+  // Store devis data for BPA step
+  devisData = { nom, tel, email, date_evt: document.getElementById('date_evt').value,
+    type_evt: type, lieu, nb_pers: document.getElementById('nb_pers').value,
+    notes: document.getElementById('notes').value,
+    items, total, refNum };
+
+  // Fill BPA fields
+  document.getElementById('bpaClientName').textContent = nom;
+  document.getElementById('bpaRef').textContent = refNum;
+  document.getElementById('bpaMontant').textContent = fmt(total);
+  bpaChecked = false;
+  document.getElementById('bpaBox').className = 'bpa-box';
+  document.getElementById('bpaBox').textContent = '';
+  document.getElementById('bpaBtn').className = 'bpa-btn';
+  document.getElementById('sigHint').style.display = 'none';
+
   // Show overlay
   document.getElementById('devisOverlay').classList.add('show');
   document.getElementById('devisOverlay').scrollTop = 0;
+  setTimeout(initBpaCanvas, 150);
 
   // ── SEND TO THIERRY via Formspree ──
   const lignes = items.map(i => `${i.emoji} ${i.nom} × ${i.qty} ${i.unit} = ${fmt(i.subtotal)}`).join('\n');
@@ -600,12 +733,160 @@ function genererDevis() {
   });
 }
 
-function imprimerDevis() {
-  window.print();
+function imprimerDevis() { window.print(); }
+function fermerDevis() { document.getElementById('devisOverlay').classList.remove('show'); }
+function scrollToBpa() {
+  document.getElementById('bpaSection').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
-function fermerDevis() {
-  document.getElementById('devisOverlay').classList.remove('show');
+// ── BPA SIGNATURE ──
+function initBpaCanvas() {
+  const canvas = document.getElementById('bpaCanvas');
+  if (!canvas) return;
+  const r = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth;
+  if (w === 0) { setTimeout(initBpaCanvas, 100); return; }
+  canvas.width  = w * r;
+  canvas.height = canvas.offsetHeight * r;
+  bpaCtx = canvas.getContext('2d');
+  bpaCtx.scale(r, r);
+  bpaCtx.strokeStyle = '#0f1a00';
+  bpaCtx.lineWidth   = 2.5;
+  bpaCtx.lineCap     = 'round';
+  bpaCtx.lineJoin    = 'round';
+  bpaHasSig = false;
+  const gp = (e) => { const rect=canvas.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:t.clientX-rect.left,y:t.clientY-rect.top}; };
+  const start=(e)=>{ e.preventDefault(); bpaDrawing=true; const p=gp(e); bpaCtx.beginPath(); bpaCtx.moveTo(p.x,p.y); };
+  const move =(e)=>{ e.preventDefault(); if(!bpaDrawing)return; const p=gp(e); bpaCtx.lineTo(p.x,p.y); bpaCtx.stroke(); bpaHasSig=true; canvas.classList.add('signed'); };
+  const end  =()=>{ bpaDrawing=false; };
+  canvas.addEventListener('mousedown',start); canvas.addEventListener('mousemove',move); canvas.addEventListener('mouseup',end); canvas.addEventListener('mouseleave',end);
+  canvas.addEventListener('touchstart',start,{passive:false}); canvas.addEventListener('touchmove',move,{passive:false}); canvas.addEventListener('touchend',end);
+}
+function clearBpa() {
+  const canvas = document.getElementById('bpaCanvas');
+  if (bpaCtx) bpaCtx.clearRect(0,0,canvas.width,canvas.height);
+  bpaHasSig = false; canvas.classList.remove('signed');
+}
+
+// ── BPA CHECKBOX ──
+function toggleBpa() {
+  bpaChecked = !bpaChecked;
+  const box = document.getElementById('bpaBox');
+  box.className = 'bpa-box' + (bpaChecked ? ' on' : '');
+  box.textContent = bpaChecked ? '✓' : '';
+  checkBpaReady();
+}
+function checkBpaReady() {
+  const btn = document.getElementById('bpaBtn');
+  btn.className = 'bpa-btn' + (bpaChecked && bpaHasSig ? ' ready' : '');
+}
+
+// ── VALIDATE BPA & SEND EMAILS ──
+async function validerBpa() {
+  if (!bpaHasSig) {
+    document.getElementById('sigHint').style.display = 'block';
+    document.getElementById('bpaCanvas').scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  if (!bpaChecked) return;
+
+  const canvas    = document.getElementById('bpaCanvas');
+  const sigBase64 = canvas.toDataURL('image/png');
+  const now       = new Date();
+
+  // Show sending state
+  document.getElementById('sendingOverlay').classList.add('show');
+
+  // ── Build email text ──
+  const lignes = devisData.items.map(i=>
+    `${i.emoji} ${i.nom} x${i.qty} ${i.unit} = ${fmt(i.subtotal)}`
+  ).join('\n');
+
+  const emailBody = `
+Bonjour ${devisData.nom},
+
+Votre devis ${devisData.refNum} a bien été reçu et votre bon pour accord enregistré.
+
+═══════════════════════════════
+RÉCAPITULATIF DE VOTRE COMMANDE
+═══════════════════════════════
+Devis N° : ${devisData.refNum}
+Date     : ${now.toLocaleDateString('fr-FR')}
+Événement: ${devisData.type_evt} — ${new Date(devisData.date_evt).toLocaleDateString('fr-FR')}
+Lieu     : ${devisData.lieu || 'À préciser'}
+
+ARTICLES COMMANDÉS :
+${lignes}
+
+TOTAL ESTIMATIF : ${fmt(devisData.total)}
+(Livraison & installation : à définir selon la commune)
+
+═══════════════════════════════
+Thierry Arthur prendra contact avec vous très prochainement pour confirmer la disponibilité et les modalités de paiement (acompte 30%).
+
+PSE+ · Piment Sweet Events
+📞 +590 690 64 52 51
+✉️ Thierryarthur971@gmail.com
+═══════════════════════════════
+  `.trim();
+
+  // ── 1. Send to Thierry via Formspree ──
+  const payloadThierry = {
+    _subject: `[PSE+ BON POUR ACCORD ✅] ${devisData.nom} — ${devisData.type_evt} — ${fmt(devisData.total)}`,
+    type: 'BON POUR ACCORD',
+    numero_devis: devisData.refNum,
+    client_nom: devisData.nom,
+    client_tel: devisData.tel,
+    client_email: devisData.email,
+    evenement: devisData.type_evt,
+    date_evenement: new Date(devisData.date_evt).toLocaleDateString('fr-FR'),
+    lieu: devisData.lieu || '-',
+    nb_personnes: devisData.nb_pers || '-',
+    articles: lignes,
+    total: fmt(devisData.total),
+    statut: '✅ BON POUR ACCORD — Signature électronique recueillie',
+    date_validation: now.toLocaleString('fr-FR'),
+  };
+
+  try {
+    await fetch(FORMSPREE, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify(payloadThierry)
+    });
+  } catch(e) { console.warn('Formspree error', e); }
+
+  // ── 2. Send to client via EmailJS (if configured) ──
+  let clientEmailSent = false;
+  if (EMAILJS_CONFIGURED) {
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email:   devisData.email,
+        to_name:    devisData.nom,
+        from_name:  'PSE+ · Piment Sweet Events',
+        reply_to:   'Thierryarthur971@gmail.com',
+        subject:    `Votre devis PSE+ confirmé — ${devisData.refNum}`,
+        message:    emailBody,
+        devis_num:  devisData.refNum,
+        total:      fmt(devisData.total),
+      });
+      clientEmailSent = true;
+    } catch(e) { console.warn('EmailJS error', e); }
+  }
+
+  // ── 3. Show success ──
+  document.getElementById('sendingOverlay').classList.remove('show');
+
+  const detail = `<strong>📋 ${devisData.refNum}</strong><br>`
+    + `👤 ${devisData.nom} · ${devisData.email}<br>`
+    + `🎉 ${devisData.type_evt} · ${new Date(devisData.date_evt).toLocaleDateString('fr-FR')}<br>`
+    + `💰 Total : ${fmt(devisData.total)}<br><br>`
+    + (clientEmailSent
+      ? `✅ Email de confirmation envoyé à <strong>${devisData.email}</strong>`
+      : `📬 Thierry a été notifié · Il vous contactera sous 2h<br><small style="color:#aaa">Pour recevoir une copie automatique, demandez à votre consultant d'activer EmailJS</small>`);
+
+  document.getElementById('sucDetail').innerHTML = detail;
+  document.getElementById('successOverlay').classList.add('show');
 }
 
 // ── INIT ──
@@ -613,5 +894,26 @@ renderCatalogue();
 const today = new Date().toISOString().split('T')[0];
 document.getElementById('date_evt').min = today;
 </script>
+
+<!-- SENDING STATE -->
+<div class="sending-overlay" id="sendingOverlay">
+  <div class="sending-card">
+    <div class="sending-icon">📨</div>
+    <div class="sending-text">ENVOI EN COURS...</div>
+    <div class="sending-sub">Transmission à PSE+ et à votre email</div>
+  </div>
+</div>
+
+<!-- SUCCESS SCREEN -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-card">
+    <div class="suc-icon">🎉</div>
+    <div class="suc-title">COMMANDE CONFIRMÉE !</div>
+    <div class="suc-desc">Votre bon pour accord a bien été transmis.<br>Vous allez recevoir une confirmation par email.</div>
+    <div class="suc-detail" id="sucDetail"></div>
+    <button class="suc-print" onclick="imprimerDevis()">🖨 Sauvegarder mon devis en PDF</button>
+    <button class="suc-new" onclick="window.location.reload()">← Faire une nouvelle demande</button>
+  </div>
+</div>
 </body>
 </html>
