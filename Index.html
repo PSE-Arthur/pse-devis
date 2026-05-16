@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSE+ · Demande de Devis</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root {
+  --vert:#7DC52B; --vert-f:#5a9a1e; --vert-c:#e8f7d5;
+  --noir:#0f1a00; --gris:#f7faf2; --blanc:#fff;
+  --border:#e0ecd4; --shadow:0 2px 16px rgba(0,0,0,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Outfit',sans-serif;background:var(--gris);color:var(--noir);}
+
+/* HEADER */
+header{background:var(--noir);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.logo{background:var(--vert);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:22px;padding:4px 14px;border-radius:6px;letter-spacing:2px;}
+.logo-name{color:#fff;font-size:13px;font-weight:500;}
+.logo-sub{color:rgba(255,255,255,.4);font-size:10px;}
+.h-tel{color:var(--vert);font-size:12px;font-weight:600;}
+
+/* LAYOUT */
+.page-wrap{max-width:1000px;margin:0 auto;padding:20px 16px 60px;display:grid;grid-template-columns:1fr 280px;gap:20px;}
+
+/* STEPS */
+.step-card{background:var(--blanc);border-radius:14px;border:1.5px solid var(--border);margin-bottom:12px;overflow:hidden;transition:border-color .2s,opacity .2s;box-shadow:var(--shadow);}
+.step-card.active{border-color:var(--vert);}
+.step-card.waiting{opacity:.55;}
+.step-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;}
+.step-num{width:28px;height:28px;border-radius:50%;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.step-num.done{background:var(--vert);color:#fff;}
+.step-num.active{background:var(--noir);color:#fff;}
+.step-num.wait{background:#f0f0f0;color:#aaa;border:1.5px solid #ddd;}
+.step-title{font-size:14px;font-weight:600;flex:1;color:var(--noir);}
+.step-title.wait{color:#aaa;}
+.step-mini{font-size:12px;color:var(--vert-f);font-weight:500;}
+.step-edit{font-size:11px;color:var(--vert);cursor:pointer;padding:3px 8px;border-radius:20px;background:var(--vert-c);font-weight:600;white-space:nowrap;}
+.step-body{border-top:1px solid #f0f0f0;padding:18px;display:none;}
+.step-body.open{display:block;}
+
+/* FORM FIELDS */
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.f-field{margin-bottom:12px;}
+.f-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;margin-bottom:5px;}
+.f-req{color:var(--vert);margin-left:2px;}
+input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select,textarea{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:14px;color:var(--noir);background:var(--gris);outline:none;appearance:none;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--vert);background:#fff;}
+textarea{min-height:70px;resize:vertical;}
+
+/* ARTICLE ACCORDION */
+.art-accordion{margin-bottom:8px;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.art-acc-header{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;background:#fafcf7;user-select:none;}
+.art-acc-header:hover{background:var(--vert-c);}
+.art-acc-title{font-size:13px;font-weight:700;flex:1;color:var(--noir);}
+.art-acc-badge{font-size:11px;font-weight:600;color:var(--vert-f);background:var(--vert-c);padding:3px 10px;border-radius:20px;}
+.art-acc-arrow{font-size:16px;color:#aaa;transition:transform .2s;}
+.art-acc-arrow.open{transform:rotate(180deg);}
+.art-acc-body{padding:0 14px;display:none;}
+.art-acc-body.open{display:block;padding:0 14px 10px;}
+
+/* ARTICLE ROWS */
+.art-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f5f8f0;}
+.art-row:last-child{border-bottom:none;}
+.art-name{flex:1;font-size:13px;font-weight:600;color:var(--noir);}
+.art-price-tag{font-size:11px;color:var(--vert-f);font-weight:500;background:var(--vert-c);padding:2px 8px;border-radius:10px;white-space:nowrap;}
+.qty-wrap{display:flex;align-items:center;gap:5px;}
+.qbtn{width:30px;height:30px;border-radius:8px;border:none;background:var(--vert-c);color:var(--vert-f);font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;flex-shrink:0;}
+.qbtn:active{background:var(--vert);color:#fff;}
+.qinput{width:54px;text-align:center;padding:6px 2px;border:1.5px solid var(--border);border-radius:8px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;background:var(--gris);outline:none;-moz-appearance:textfield;}
+.qinput:focus{border-color:var(--vert);background:#fff;}
+.qinput::-webkit-inner-spin-button{-webkit-appearance:none;}
+.art-subtotal{min-width:55px;text-align:right;font-size:12px;font-weight:700;}
+.art-subtotal.has{color:var(--vert-f);}
+.art-subtotal.no{color:#ccc;}
+
+/* TOTAL BAR */
+.total-live{background:var(--noir);border-radius:10px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.total-live span{font-size:12px;color:rgba(255,255,255,.5);font-weight:500;}
+.total-live strong{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--vert);letter-spacing:1px;}
+
+/* SUGGESTION BANNER */
+.suggest-banner{background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px;}
+.suggest-icon{font-size:20px;flex-shrink:0;}
+.suggest-text{flex:1;font-size:12px;color:#7a5000;line-height:1.6;}
+.suggest-btn{background:#f59e0b;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.suggest-btn:hover{background:#d97706;}
+
+/* DEVIS DOCUMENT */
+.dv-doc{background:#fff;border-radius:12px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:14px;}
+.dv-head{background:var(--noir);padding:22px 28px;display:flex;justify-content:space-between;align-items:flex-start;}
+.dv-logo{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--vert);letter-spacing:3px;}
+.dv-co{color:rgba(255,255,255,.45);font-size:11px;margin-top:2px;}
+.dv-contact{text-align:right;color:rgba(255,255,255,.55);font-size:11px;line-height:1.8;}
+.dv-contact strong{color:var(--vert);}
+.dv-ref{background:var(--vert);padding:10px 28px;display:flex;justify-content:space-between;align-items:center;}
+.dv-ref-num{font-family:'Bebas Neue',sans-serif;font-size:16px;color:#fff;letter-spacing:2px;}
+.dv-ref-meta{font-size:11px;color:rgba(255,255,255,.8);text-align:right;}
+.dv-body{padding:20px 28px;}
+.dv-sec{margin-bottom:18px;}
+.dv-sec-title{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;color:var(--vert-f);margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--vert-c);}
+.dv-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.dv-info{background:var(--gris);border-radius:8px;padding:12px;}
+.dv-info-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#aaa;margin-bottom:4px;}
+.dv-info-val{font-size:13px;font-weight:600;line-height:1.5;}
+.dv-table{width:100%;border-collapse:collapse;font-size:12px;}
+.dv-table thead tr{background:var(--noir);}
+.dv-table th{color:rgba(255,255,255,.65);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;text-align:left;}
+.dv-table th.c{text-align:center;}
+.dv-table th.r{text-align:right;}
+.dv-table tbody tr{border-bottom:1px solid #f0f4eb;}
+.dv-table tbody tr:last-child{border-bottom:none;}
+.dv-table td{padding:8px 10px;vertical-align:middle;}
+.dv-table td.c{text-align:center;}
+.dv-table td.r{text-align:right;font-weight:700;}
+.dv-table .cat-tr td{background:#f9fdf3;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;}
+.dv-totals{background:var(--gris);border-radius:10px;padding:14px 16px;margin-top:12px;}
+.dv-total-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px;}
+.dv-total-row.grand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--vert-f);border-top:1px solid #ddd;margin-top:6px;padding-top:10px;}
+.dv-conditions{background:#fffdf0;border:1px solid #ffeeba;border-radius:8px;padding:12px;font-size:11px;color:#7a6000;line-height:1.9;}
+.dispo-notice{background:#e8f7d5;border:1.5px solid var(--vert);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:12px;color:var(--vert-f);line-height:1.6;}
+
+/* BPA */
+.bpa-section{background:#fff;border-radius:12px;border:1.5px solid var(--border);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);}
+.bpa-sec-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--noir);margin-bottom:6px;}
+.sig-canvas{width:100%;height:140px;border:2px solid var(--border);border-radius:10px;background:var(--gris);cursor:crosshair;touch-action:none;display:block;}
+.sig-canvas.signed{border-color:var(--vert);background:#fff;}
+.sig-clear{margin-top:6px;background:transparent;border:1px solid #ddd;border-radius:8px;padding:5px 14px;font-size:11px;color:#aaa;cursor:pointer;}
+.bpa-check-wrap{display:flex;align-items:flex-start;gap:12px;background:var(--vert-c);border:2px solid var(--vert);border-radius:12px;padding:14px;margin:14px 0;cursor:pointer;}
+.bpa-cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--vert);background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;transition:all .15s;margin-top:1px;}
+.bpa-cb.on{background:var(--vert);border-color:var(--vert);color:#fff;}
+.bpa-text{font-size:12px;font-weight:600;color:var(--vert-f);line-height:1.6;}
+.sig-req{display:none;background:#fde;border:1px solid #e74c3c;color:#c0392b;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;margin-top:6px;text-align:center;}
+.sig-req.show{display:block;}
+
+/* BUTTONS */
+.btn-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px;gap:10px;}
+.btn-main{padding:13px 24px;background:var(--vert);color:#fff;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1px;cursor:pointer;transition:all .2s;flex:1;}
+.btn-main:hover{background:var(--vert-f);transform:translateY(-1px);}
+.btn-main:disabled{background:#ccc;transform:none;cursor:not-allowed;}
+.btn-back{padding:12px 18px;background:transparent;border:1.5px solid var(--border);border-radius:12px;color:#777;font-size:13px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-back:hover{background:var(--gris);}
+.btn-pdf{padding:12px 18px;background:transparent;border:1.5px solid var(--vert);border-radius:12px;color:var(--vert-f);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-pdf:hover{background:var(--vert-c);}
+
+/* ASIDE */
+.aside-sticky{position:sticky;top:76px;}
+.aside-card{background:#fff;border-radius:14px;border:1.5px solid var(--border);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.aside-title{font-size:13px;font-weight:700;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f0f0f0;color:var(--noir);}
+.prog-item{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;}
+.prog-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:all .2s;}
+.prog-dot.done{background:var(--vert);}
+.prog-dot.active{background:var(--noir);}
+.prog-dot.wait{background:#ddd;}
+.prog-label{font-size:12px;transition:all .2s;}
+.prog-label.done{color:var(--vert-f);font-weight:600;}
+.prog-label.active{color:var(--noir);font-weight:600;}
+.prog-label.wait{color:#aaa;}
+.prog-edit{font-size:10px;color:var(--vert);margin-left:auto;font-weight:600;}
+.aside-sep{border:none;border-top:1px solid #f0f0f0;margin:10px 0;}
+.aside-row{margin-bottom:10px;}
+.aside-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#aaa;margin-bottom:3px;}
+.aside-val{font-size:12px;color:var(--noir);line-height:1.6;}
+.aside-val.empty{color:#bbb;font-style:italic;}
+.aside-arts{font-size:11px;color:var(--noir);line-height:1.9;}
+.aside-total-box{background:var(--noir);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+.aside-total-box span{font-size:11px;color:rgba(255,255,255,.4);}
+.aside-total-box strong{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--vert);}
+.aside-help{background:var(--gris);border-radius:10px;padding:12px;font-size:11px;color:#777;line-height:1.9;}
+.aside-help strong{color:var(--noir);}
+
+/* MOBILE BOTTOM BAR */
+.mobile-total{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--noir);padding:10px 16px;z-index:100;align-items:center;justify-content:space-between;}
+.mobile-total span{font-size:11px;color:rgba(255,255,255,.5);}
+.mobile-total strong{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--vert);}
+
+/* SENDING / SUCCESS */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px;}
+.overlay.show{display:flex;}
+.overlay-card{background:#fff;border-radius:20px;padding:32px 28px;max-width:440px;width:100%;text-align:center;}
+.ov-icon{font-size:56px;margin-bottom:14px;}
+.ov-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--vert);margin-bottom:8px;}
+.ov-desc{font-size:13px;color:#666;line-height:1.8;margin-bottom:16px;}
+.ov-detail{background:var(--gris);border-radius:10px;padding:14px;font-size:12px;color:#555;line-height:1.9;text-align:left;margin-bottom:16px;}
+.spin{animation:spin 1s linear infinite;display:inline-block;font-size:40px;margin-bottom:12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media print{
+  header,.aside-sticky,.btn-row,.mobile-total{display:none!important;}
+  .page-wrap{display:block;padding:0;}
+  .step-card:not(.active){display:none;}
+  .step-body{display:block!important;}
+}
+
+@media(max-width:680px){
+  .page-wrap{grid-template-columns:1fr;padding-bottom:80px;}
+  .aside-sticky{display:none;}
+  .mobile-total{display:flex;}
+  .f-row{grid-template-columns:1fr;}
+  .dv-grid2{grid-template-columns:1fr;}
+  .dv-head{flex-direction:column;gap:10px;}
+  .dv-contact{text-align:left;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="logo">PSE+</div>
+    <div><div class="logo-name">Piment Sweet Events +</div><div class="logo-sub">Location événementielle · Guadeloupe</div></div>
+  </div>
+  <div class="h-tel">📞 +590 690 64 52 51</div>
+</header>
+
+<div class="page-wrap">
+
+<!-- ═══ MAIN FORM ═══ -->
+<div>
+
+<!-- ── ÉTAPE 1 — IDENTIFICATION ── -->
+<div class="step-card active" id="card1">
+  <div class="step-header" onclick="toggleStep(1)">
+    <div class="step-num active" id="num1">1</div>
+    <div class="step-title" id="title1">Identification</div>
+    <div class="step-mini" id="mini1"></div>
+    <div class="step-edit" id="edit1" style="display:none;" onclick="event.stopPropagation();goStep(1)">Modifier</div>
+  </div>
+  <div class="step-body open" id="body1">
+    <div class="f-row" style="margin-top:6px;">
+      <div class="f-field"><label class="f-label">Nom complet <span class="f-req">*</span></label><input type="text" id="nom" placeholder="Marie Dupont"></div>
+      <div class="f-field"><label class="f-label">Téléphone <span class="f-req">*</span></label><input type="tel" id="tel" placeholder="+590 6XX XX XX XX"></div>
+    </div>
+    <div class="f-field"><label class="f-label">Email <span class="f-req">*</span></label><input type="email" id="email" placeholder="votre@email.com"></div>
+    <div class="f-row">
+      <div class="f-field"><label class="f-label">Date de l'événement <span class="f-req">*</span></label><input type="date" id="date_evt"></div>
+      <div class="f-field"><label class="f-label">Nombre de personnes</label><input type="number" id="nb_pers" placeholder="Ex: 200" min="1" oninput="updateSuggestion()"></div>
+    </div>
+    <div class="f-row">
+      <div class="f-field"><label class="f-label">Type d'événement <span class="f-req">*</span></label>
+        <select id="type_evt"><option value="">— Choisir —</option><option>Mariage</option><option>Anniversaire</option><option>Baptême</option><option>Soirée d'entreprise</option><option>Conférence / Séminaire</option><option>Festival / Concert</option><option>Autre</option></select>
+      </div>
+      <div class="f-field"><label class="f-label">Commune / Lieu</label><input type="text" id="lieu" placeholder="Ex: Pointe-à-Pitre"></div>
+    </div>
+    <div class="btn-row">
+      <div></div>
+      <button class="btn-main" onclick="validateStep1()">Valider et continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ÉTAPE 2 — ARTICLES ── -->
+<div class="step-card waiting" id="card2">
+  <div class="step-header" onclick="toggleStep(2)">
+    <div class="step-num wait" id="num2">2</div>
+    <div class="step-title wait" id="title2">Articles & quantités</div>
+    <div class="step-mini" id="mini2"></div>
+    <div class="step-edit" id="edit2" style="display:none;" onclick="event.stopPropagation();goStep(2)">Modifier</div>
+  </div>
+  <div class="step-body" id="body2">
+
+    <div class="total-live" style="margin-top:6px;">
+      <span>Total estimatif</span>
+      <strong id="liveTotal">0,00 €</strong>
+    </div>
+
+    <!-- SUGGESTION BANNER -->
+    <div class="suggest-banner" id="suggestBanner" style="display:none;">
+      <div class="suggest-icon">💡</div>
+      <div class="suggest-text" id="suggestText"></div>
+      <button class="suggest-btn" onclick="applySuggestion()">Appliquer</button>
+    </div>
+
+    <!-- MOBILIER -->
+    <div class="art-accordion">
+      <div class="art-acc-header" onclick="toggleAcc('acc-mobilier')">
+        <span style="font-size:18px;">🪑</span>
+        <div class="art-acc-title">Mobilier</div>
+        <div class="art-acc-badge" id="badge-mobilier">0 article</div>
+        <span class="art-acc-arrow open" id="arrow-mobilier">▾</span>
+      </div>
+      <div class="art-acc-body open" id="acc-mobilier">
+        <div id="list-mobilier"></div>
+      </div>
+    </div>
+
+    <!-- STRUCTURE -->
+    <div class="art-accordion">
+      <div class="art-acc-header" onclick="toggleAcc('acc-structure')">
+        <span style="font-size:18px;">⛺</span>
+        <div class="art-acc-title">Structure</div>
+        <div class="art-acc-badge" id="badge-structure">0 article</div>
+        <span class="art-acc-arrow open" id="arrow-structure">▾</span>
+      </div>
+      <div class="art-acc-body open" id="acc-structure">
+        <div id="list-structure"></div>
+      </div>
+    </div>
+
+    <!-- VAISSELLE -->
+    <div class="art-accordion">
+      <div class="art-acc-header" onclick="toggleAcc('acc-vaisselle')">
+        <span style="font-size:18px;">🍽</span>
+        <div class="art-acc-title">Vaisselle & Couverts</div>
+        <div class="art-acc-badge" id="badge-vaisselle">8 articles</div>
+        <span class="art-acc-arrow" id="arrow-vaisselle">▾</span>
+      </div>
+      <div class="art-acc-body" id="acc-vaisselle">
+        <div id="list-vaisselle"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(1)">← Retour</button>
+      <button class="btn-main" onclick="validateStep2()">Voir mon devis →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ÉTAPE 3 — DEVIS ── -->
+<div class="step-card waiting" id="card3">
+  <div class="step-header" onclick="toggleStep(3)">
+    <div class="step-num wait" id="num3">3</div>
+    <div class="step-title wait" id="title3">Votre devis</div>
+    <div class="step-mini" id="mini3"></div>
+    <div class="step-edit" id="edit3" style="display:none;" onclick="event.stopPropagation();goStep(3)">Voir</div>
+  </div>
+  <div class="step-body" id="body3">
+    <!-- Document devis -->
+    <div class="dv-doc" id="devisDoc" style="margin-top:6px;">
+      <div class="dv-head">
+        <div><div class="dv-logo">PSE+</div><div class="dv-co">Piment Sweet Events · Guadeloupe</div></div>
+        <div class="dv-contact"><div><strong>Thierry Arthur</strong></div><div>+590 690 64 52 51</div><div>Thierryarthur971@gmail.com</div></div>
+      </div>
+      <div class="dv-ref">
+        <div class="dv-ref-num" id="dvRef">DEVIS N° —</div>
+        <div class="dv-ref-meta"><div id="dvDate">—</div><div id="dvValidite">—</div></div>
+      </div>
+      <div class="dv-body">
+        <div class="dv-sec">
+          <div class="dv-sec-title">INFORMATIONS CLIENT & ÉVÉNEMENT</div>
+          <div class="dv-grid2">
+            <div class="dv-info"><div class="dv-info-lbl">Client</div><div class="dv-info-val" id="dvClient">—</div></div>
+            <div class="dv-info"><div class="dv-info-lbl">Événement</div><div class="dv-info-val" id="dvEvent">—</div></div>
+          </div>
+        </div>
+        <div class="dv-sec">
+          <div class="dv-sec-title">DÉTAIL DE LA PRESTATION</div>
+          <table class="dv-table">
+            <thead><tr><th>Article</th><th class="c">Qté</th><th class="c">Prix unit.</th><th class="r">Total</th></tr></thead>
+            <tbody id="dvBody"></tbody>
+          </table>
+          <div class="dv-totals">
+            <div class="dv-total-row"><span style="color:#666;">Sous-total matériel</span><span id="dvSub" style="font-weight:700;">—</span></div>
+            <div class="dv-total-row"><span style="color:#666;">Livraison & installation</span><span style="color:#aaa;font-style:italic;">À définir selon la commune</span></div>
+            <div class="dv-total-row grand"><span>TOTAL ESTIMATIF</span><span id="dvTotal">—</span></div>
+            <div style="font-size:10px;color:#aaa;margin-top:6px;">* Sous réserve de disponibilité · TVA non applicable — Art. 293B CGI</div>
+          </div>
+        </div>
+        <div class="dv-sec">
+          <div class="dv-sec-title">CONDITIONS GÉNÉRALES</div>
+          <div class="dv-conditions">
+            ✅ <strong>Validité :</strong> Ce devis est valable 30 jours.<br>
+            💰 <strong>Acompte :</strong> 30% demandé à la confirmation de commande.<br>
+            📦 <strong>Réservation :</strong> Le matériel est réservé à réception de l'acompte.<br>
+            📍 <strong>Livraison :</strong> Frais selon la commune, à préciser à la confirmation.<br>
+            ⚠️ <strong>Casse / Perte :</strong> Tout article manquant ou endommagé sera facturé à sa valeur de remplacement.
+          </div>
+        </div>
+        <div class="dispo-notice">
+          📋 <strong>Sous réserve de disponibilité</strong> — Ce devis est indicatif. Thierry Arthur vous confirmera la disponibilité du matériel sous 2h après réception de votre bon pour accord.
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(2)">← Modifier les articles</button>
+      <button class="btn-pdf" onclick="window.print()">🖨 Sauvegarder PDF</button>
+      <button class="btn-main" onclick="validateStep3()">Je confirme cette commande →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ÉTAPE 4 — BON POUR ACCORD ── -->
+<div class="step-card waiting" id="card4">
+  <div class="step-header" onclick="toggleStep(4)">
+    <div class="step-num wait" id="num4">4</div>
+    <div class="step-title wait" id="title4">Bon pour accord</div>
+    <div class="step-mini" id="mini4"></div>
+  </div>
+  <div class="step-body" id="body4">
+    <div class="bpa-section" style="margin-top:6px;">
+      <div class="bpa-sec-title">✍️ Votre signature</div>
+      <div style="font-size:12px;color:#777;margin-bottom:10px;line-height:1.6;">Signez ci-dessous pour confirmer votre commande. Vous recevrez une copie par email automatiquement.</div>
+      <canvas class="sig-canvas" id="sigCanvas"></canvas>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+        <button class="sig-clear" onclick="clearSig()">✕ Effacer</button>
+        <span style="font-size:11px;color:#bbb;">Signez avec votre doigt ou souris</span>
+      </div>
+      <div class="sig-req" id="sigReq">✋ La signature est obligatoire pour valider.</div>
+    </div>
+    <div class="bpa-check-wrap" onclick="toggleBpa()" id="bpaWrap">
+      <div class="bpa-cb" id="bpaCb"></div>
+      <div class="bpa-text">Je soussigné(e) <strong id="bpaName">—</strong>, accepte le devis <strong id="bpaRef">—</strong> d'un montant de <strong id="bpaMontant">—</strong>. J'ai pris connaissance des conditions générales. <strong>Bon pour accord.</strong></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-back" onclick="goStep(3)">← Revoir le devis</button>
+      <button class="btn-main" id="bpaBtn" onclick="envoyerBpa()" disabled>✓ CONFIRMER ET ENVOYER</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ═══ ASIDE ═══ -->
+<div>
+<div class="aside-sticky">
+
+  <div class="aside-card">
+    <div class="aside-title">Résumé de votre demande</div>
+
+    <!-- Progress -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#aaa;margin-bottom:6px;">Avancement</div>
+      <div class="prog-item" onclick="goStep(1)" title="Retour étape 1">
+        <div class="prog-dot wait" id="pd1"></div>
+        <div class="prog-label wait" id="pl1">Identification</div>
+        <div class="prog-edit" id="pe1" style="display:none;">modifier</div>
+      </div>
+      <div class="prog-item" onclick="goStep(2)" title="Retour étape 2">
+        <div class="prog-dot wait" id="pd2"></div>
+        <div class="prog-label wait" id="pl2">Articles & quantités</div>
+        <div class="prog-edit" id="pe2" style="display:none;">modifier</div>
+      </div>
+      <div class="prog-item" onclick="goStep(3)" title="Retour étape 3">
+        <div class="prog-dot wait" id="pd3"></div>
+        <div class="prog-label wait" id="pl3">Votre devis</div>
+        <div class="prog-edit" id="pe3" style="display:none;">voir</div>
+      </div>
+      <div class="prog-item">
+        <div class="prog-dot wait" id="pd4"></div>
+        <div class="prog-label wait" id="pl4">Bon pour accord</div>
+      </div>
+    </div>
+
+    <hr class="aside-sep">
+
+    <div class="aside-row">
+      <div class="aside-lbl">Client</div>
+      <div class="aside-val empty" id="asideClient">Non renseigné</div>
+    </div>
+    <div class="aside-row">
+      <div class="aside-lbl">Événement</div>
+      <div class="aside-val empty" id="asideEvent">Non renseigné</div>
+    </div>
+
+    <hr class="aside-sep">
+
+    <div class="aside-row">
+      <div class="aside-lbl">Articles catalogue</div>
+      <div class="aside-arts empty" id="asideArts">Aucun article</div>
+    </div>
+
+    <div class="aside-total-box">
+      <span>Total estimatif</span>
+      <strong id="asideTotal">0,00 €</strong>
+    </div>
+  </div>
+
+  <div class="aside-help">
+    <strong>Besoin d'aide ?</strong><br>
+    📞 +590 690 64 52 51<br>
+    ✉️ Thierryarthur971@gmail.com<br>
+    <span style="color:#aaa;">Lun–Sam · 7h–18h</span>
+  </div>
+
+</div>
+</div>
+
+</div><!-- /page-wrap -->
+
+<!-- Mobile total bar -->
+<div class="mobile-total">
+  <span>Total estimatif</span>
+  <strong id="mobileTotalDisplay">0,00 €</strong>
+</div>
+
+<!-- Sending overlay -->
+<div class="overlay" id="sendingOverlay">
+  <div class="overlay-card">
+    <div class="spin">⏳</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--noir);">ENVOI EN COURS...</div>
+    <div style="font-size:12px;color:#888;margin-top:4px;">Transmission à PSE+ et à votre email</div>
+  </div>
+</div>
+
+<!-- Success overlay -->
+<div class="overlay" id="successOverlay">
+  <div class="overlay-card">
+    <div class="ov-icon">🎉</div>
+    <div class="ov-title">COMMANDE CONFIRMÉE !</div>
+    <div class="ov-desc">Votre bon pour accord a bien été transmis.<br>Vous allez recevoir une confirmation par email.</div>
+    <div class="ov-detail" id="ovDetail"></div>
+    <button class="btn-main" onclick="window.print()" style="margin-bottom:8px;">🖨 Sauvegarder mon devis PDF</button>
+    <button class="btn-back" style="width:100%;margin-top:4px;" onclick="window.location.reload()">← Faire une nouvelle demande</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const FORMSPREE = 'https://formspree.io/f/xzdoyalo';
+const EMAILJS_PUBLIC_KEY  = '5Ysvf-1GHcn7i6eUj';
+const EMAILJS_SERVICE_ID  = 'service_fg8241i';
+const EMAILJS_TEMPLATE_ID = 'template_sc9jhja';
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// ── CATALOGUE ──
+const CAT = {
+  mobilier:[
+    {id:'chaises',   nom:'Chaises',                   prix:1.20, unit:'unité', emoji:'🪑'},
+    {id:'tables',    nom:'Tables',                    prix:10,   unit:'unité', emoji:'🪵'},
+    {id:'mangedeb',  nom:'Mange-debout',              prix:10,   unit:'unité', emoji:'🧍'},
+    {id:'salon',     nom:'Salon (4 fauteuils+table)', prix:45,   unit:'set',   emoji:'🛋'},
+    {id:'nappes',    nom:'Nappes',                    prix:15,   unit:'unité', emoji:'🧼'},
+  ],
+  structure:[
+    {id:'tentes',    nom:'Tentes',                    prix:150,  unit:'unité', emoji:'⛺'},
+    {id:'plancher',  nom:'Plancher',                  prix:12,   unit:'m²',   emoji:'🪵'},
+  ],
+  vaisselle:[
+    {id:'fourch',    nom:'Fourchettes',               prix:0.45, unit:'pièce', emoji:'🍴'},
+    {id:'couteaux',  nom:'Couteaux',                  prix:0.45, unit:'pièce', emoji:'🔪'},
+    {id:'ptcuil',    nom:'Petites cuillères',         prix:0.45, unit:'pièce', emoji:'🥄'},
+    {id:'gdcuil',    nom:'Grandes cuillères',         prix:0.45, unit:'pièce', emoji:'🥄'},
+    {id:'verreau',   nom:'Verres à eau',              prix:0.45, unit:'pièce', emoji:'🥛'},
+    {id:'verrvin',   nom:'Verres à vin',              prix:0.45, unit:'pièce', emoji:'🍷'},
+    {id:'verrchamp', nom:'Verres à champagne',        prix:0.45, unit:'pièce', emoji:'🥂'},
+    {id:'seau',      nom:'Seaux à champagne',         prix:1,    unit:'unité', emoji:'🍾'},
+  ]
+};
+const allItems = Object.values(CAT).flat();
+const qtys = {};
+allItems.forEach(a => qtys[a.id] = 0);
+
+// ── STATE ──
+let currentStep = 1;
+let devisData = {};
+let bpaChecked = false;
+let sigHasData = false;
+let sigCtx, sigDrawing = false, sigInited = false;
+let refNum = '';
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('date_evt').min = new Date().toISOString().split('T')[0];
+  renderCatalogue();
+  updateTotal();
+});
+
+// ── CATALOGUE RENDER ──
+function renderCatalogue() {
+  Object.entries(CAT).forEach(([cat, items]) => {
+    document.getElementById('list-' + cat).innerHTML = items.map(a => `
+      <div class="art-row" id="row_${a.id}">
+        <div class="art-name">${a.emoji} ${a.nom}</div>
+        <div class="art-price-tag">${a.prix.toFixed(2).replace('.',',')} € / ${a.unit}</div>
+        <div class="qty-wrap">
+          <button class="qbtn" onclick="dq('${a.id}',-1)">−</button>
+          <input type="number" class="qinput" id="q_${a.id}" value="0" min="0" inputmode="numeric" oninput="setQ('${a.id}',this.value)" onfocus="this.select()">
+          <button class="qbtn" onclick="dq('${a.id}',1)">+</button>
+        </div>
+        <div class="art-subtotal no" id="sub_${a.id}">—</div>
+      </div>`).join('');
+  });
+}
+
+function dq(id, delta) {
+  qtys[id] = Math.max(0, qtys[id] + delta);
+  document.getElementById('q_' + id).value = qtys[id];
+  updateSubtotal(id); updateTotal();
+}
+function setQ(id, val) {
+  qtys[id] = Math.max(0, parseInt(val) || 0);
+  updateSubtotal(id); updateTotal();
+}
+function updateSubtotal(id) {
+  const a = allItems.find(x => x.id === id);
+  const q = qtys[id]; const sub = document.getElementById('sub_' + id);
+  sub.textContent = q > 0 ? fmt(q * a.prix) : '—';
+  sub.className = 'art-subtotal ' + (q > 0 ? 'has' : 'no');
+}
+function updateTotal() {
+  let total = 0; let count = 0; let arts = [];
+  Object.entries(CAT).forEach(([cat, items]) => {
+    let catCount = 0;
+    items.forEach(a => {
+      const q = qtys[a.id];
+      if (q > 0) { total += q * a.prix; count++; catCount++; arts.push(`${a.emoji} ${a.nom} × ${q}`); }
+    });
+    const badge = document.getElementById('badge-' + cat);
+    if (badge) badge.textContent = catCount > 0 ? catCount + ' article' + (catCount > 1 ? 's' : '') : (cat === 'vaisselle' ? '8 articles' : '0 article');
+  });
+  const t = fmt(total);
+  document.getElementById('liveTotal').textContent = t;
+  document.getElementById('asideTotal').textContent = t;
+  const mob = document.getElementById('mobileTotalDisplay');
+  if (mob) mob.textContent = t;
+  document.getElementById('asideArts').innerHTML = arts.length > 0
+    ? `<div class="aside-arts">${arts.join('<br>')}</div>`
+    : '<div class="aside-arts empty">Aucun article</div>';
+  if (arts.length > 0) { document.getElementById('mini2').textContent = count + ' article' + (count > 1 ? 's' : '') + ' · ' + t; }
+}
+function fmt(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
+
+// ── SUGGESTION VAISSELLE ──
+function updateSuggestion() {
+  const nb = parseInt(document.getElementById('nb_pers').value) || 0;
+  const banner = document.getElementById('suggestBanner');
+  if (nb > 0) {
+    document.getElementById('suggestText').innerHTML =
+      `💡 Pour <strong>${nb} personnes</strong>, nous suggérons : ${nb} fourchettes, couteaux, petites cuillères, verres à eau, verres à vin. Vous pourrez modifier librement.`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+function applySuggestion() {
+  const nb = parseInt(document.getElementById('nb_pers').value) || 0;
+  if (!nb) return;
+  ['fourch','couteaux','ptcuil','verreau','verrvin'].forEach(id => {
+    qtys[id] = nb;
+    document.getElementById('q_' + id).value = nb;
+    updateSubtotal(id);
+  });
+  // Open vaisselle accordion
+  const acc = document.getElementById('acc-vaisselle');
+  const arrow = document.getElementById('arrow-vaisselle');
+  acc.classList.add('open'); arrow.classList.add('open');
+  updateTotal();
+  document.getElementById('acc-vaisselle').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+// ── ACCORDION ──
+function toggleAcc(id) {
+  const body = document.getElementById(id);
+  const arrow = document.getElementById('arrow-' + id.replace('acc-',''));
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+// ── STEP NAVIGATION ──
+function goStep(n) {
+  if (n > currentStep && n !== currentStep) return;
+  currentStep = n;
+  [1,2,3,4].forEach(i => {
+    const card = document.getElementById('card' + i);
+    const body = document.getElementById('body' + i);
+    const num  = document.getElementById('num' + i);
+    const ttl  = document.getElementById('title' + i);
+    const edt  = document.getElementById('edit' + i);
+    const pd   = document.getElementById('pd' + i);
+    const pl   = document.getElementById('pl' + i);
+    const pe   = document.getElementById('pe' + i);
+    if (i < n) {
+      card.className = 'step-card'; card.style.borderColor = '';
+      body.className = 'step-body';
+      num.className = 'step-num done'; num.textContent = '✓';
+      ttl.className = 'step-title'; ttl.style.color = '';
+      if (edt) edt.style.display = 'inline-block';
+      pd.className = 'prog-dot done'; pl.className = 'prog-label done';
+      if (pe) pe.style.display = 'block';
+    } else if (i === n) {
+      card.className = 'step-card active';
+      body.className = 'step-body open';
+      num.className = 'step-num active'; num.textContent = i;
+      ttl.className = 'step-title'; ttl.style.color = '';
+      if (edt) edt.style.display = 'none';
+      pd.className = 'prog-dot active'; pl.className = 'prog-label active';
+      if (pe) pe.style.display = 'none';
+    } else {
+      card.className = 'step-card waiting';
+      body.className = 'step-body';
+      num.className = 'step-num wait'; num.textContent = i;
+      ttl.className = 'step-title wait';
+      if (edt) edt.style.display = 'none';
+      pd.className = 'prog-dot wait'; pl.className = 'prog-label wait';
+      if (pe) pe.style.display = 'none';
+    }
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function toggleStep(n) { if (n <= currentStep) goStep(n); }
+
+// ── VALIDATE STEPS ──
+function validateStep1() {
+  const nom = document.getElementById('nom').value.trim();
+  const tel = document.getElementById('tel').value.trim();
+  const em  = document.getElementById('email').value.trim();
+  const dt  = document.getElementById('date_evt').value;
+  const tp  = document.getElementById('type_evt').value;
+  if (!nom || !tel || !em || !dt || !tp) { alert('Merci de remplir tous les champs obligatoires (*).'); return; }
+  // Update aside
+  document.getElementById('asideClient').className = 'aside-val';
+  document.getElementById('asideClient').innerHTML = `<strong>${nom}</strong><br>${em}<br>${tel}`;
+  const lieu = document.getElementById('lieu').value;
+  const nbp  = document.getElementById('nb_pers').value;
+  document.getElementById('asideEvent').className = 'aside-val';
+  document.getElementById('asideEvent').innerHTML = `${tp}<br>📅 ${new Date(dt+'T00:00').toLocaleDateString('fr-FR')}`
+    + (nbp ? `<br>👥 ${nbp} personnes` : '') + (lieu ? `<br>📍 ${lieu}` : '');
+  document.getElementById('mini1').textContent = nom + ' · ' + tp;
+  updateSuggestion();
+  currentStep = 2; goStep(2);
+}
+function validateStep2() {
+  const items = allItems.filter(a => qtys[a.id] > 0);
+  if (items.length === 0) { alert('Sélectionnez au moins un article.'); return; }
+  buildDevis(); currentStep = 3; goStep(3);
+}
+function validateStep3() { currentStep = 4; goStep(4); setTimeout(initSig, 150); }
+
+// ── BUILD DEVIS ──
+function buildDevis() {
+  const nom  = document.getElementById('nom').value.trim();
+  const tel  = document.getElementById('tel').value.trim();
+  const em   = document.getElementById('email').value.trim();
+  const dt   = document.getElementById('date_evt').value;
+  const tp   = document.getElementById('type_evt').value;
+  const lieu = document.getElementById('lieu').value;
+  const nbp  = document.getElementById('nb_pers').value;
+  const items = allItems.filter(a => qtys[a.id] > 0).map(a => ({...a, qty:qtys[a.id], subtotal:qtys[a.id]*a.prix}));
+  const total = items.reduce((s,a) => s + a.subtotal, 0);
+  const now = new Date();
+  const valid = new Date(now); valid.setDate(valid.getDate()+30);
+  refNum = 'PSE-' + now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + '-' + String(Math.floor(Math.random()*999)+1).padStart(3,'0');
+  devisData = {nom,tel,email:em,date_evt:dt,type_evt:tp,lieu,nb_pers:nbp,items,total,refNum};
+
+  document.getElementById('dvRef').textContent = 'DEVIS N° ' + refNum;
+  document.getElementById('dvDate').textContent = 'Émis le ' + now.toLocaleDateString('fr-FR');
+  document.getElementById('dvValidite').textContent = 'Valide jusqu\'au ' + valid.toLocaleDateString('fr-FR');
+  document.getElementById('dvClient').innerHTML = `<strong>${nom}</strong><br>${tel}<br>${em}`;
+  document.getElementById('dvEvent').innerHTML = `<strong>${tp}</strong><br>📅 ${new Date(dt+'T00:00').toLocaleDateString('fr-FR')}`
+    + (nbp ? `<br>👥 ${nbp} personnes` : '') + (lieu ? `<br>📍 ${lieu}` : '');
+
+  const catLabels = {mobilier:'🪑 Mobilier',structure:'⛺ Structure',vaisselle:'🍽 Vaisselle & Couverts'};
+  let tbody = '';
+  Object.entries(CAT).forEach(([cat, arts]) => {
+    const catItems = arts.filter(a => items.find(i => i.id === a.id));
+    if (!catItems.length) return;
+    tbody += `<tr class="cat-tr"><td colspan="4">${catLabels[cat]}</td></tr>`;
+    catItems.forEach(a => {
+      const it = items.find(i => i.id === a.id);
+      tbody += `<tr><td>${a.emoji} ${a.nom}</td><td class="c"><strong>${it.qty}</strong> ${a.unit}</td><td class="c">${a.prix.toFixed(2).replace('.',',')} €</td><td class="r">${fmt(it.subtotal)}</td></tr>`;
+    });
+  });
+  document.getElementById('dvBody').innerHTML = tbody;
+  document.getElementById('dvSub').textContent = fmt(total);
+  document.getElementById('dvTotal').textContent = fmt(total);
+  document.getElementById('mini3').textContent = refNum + ' · ' + fmt(total);
+
+  // BPA fields
+  document.getElementById('bpaName').textContent = nom;
+  document.getElementById('bpaRef').textContent = refNum;
+  document.getElementById('bpaMontant').textContent = fmt(total);
+}
+
+// ── SIGNATURE ──
+function initSig() {
+  const canvas = document.getElementById('sigCanvas');
+  if (!canvas) return;
+  const r = window.devicePixelRatio || 1;
+  const w = canvas.offsetWidth;
+  if (w === 0) { setTimeout(initSig, 100); return; }
+  canvas.width = w * r; canvas.height = canvas.offsetHeight * r;
+  sigCtx = canvas.getContext('2d');
+  sigCtx.scale(r, r);
+  sigCtx.strokeStyle = '#0f1a00'; sigCtx.lineWidth = 2.5;
+  sigCtx.lineCap = 'round'; sigCtx.lineJoin = 'round';
+  sigHasData = false;
+  if (sigInited) return; sigInited = true;
+  const gp = e => { const rect = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return {x:t.clientX-rect.left, y:t.clientY-rect.top}; };
+  const start = e => { e.preventDefault(); sigDrawing = true; const p = gp(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); };
+  const move  = e => { e.preventDefault(); if (!sigDrawing) return; const p = gp(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); sigHasData = true; canvas.classList.add('signed'); checkBpa(); };
+  const end   = () => { sigDrawing = false; };
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, {passive:false}); canvas.addEventListener('touchmove', move, {passive:false}); canvas.addEventListener('touchend', end);
+}
+function clearSig() {
+  const canvas = document.getElementById('sigCanvas');
+  if (sigCtx) sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+  sigHasData = false; canvas.classList.remove('signed'); checkBpa();
+}
+function toggleBpa() {
+  bpaChecked = !bpaChecked;
+  const cb = document.getElementById('bpaCb');
+  cb.className = 'bpa-cb' + (bpaChecked ? ' on' : '');
+  cb.textContent = bpaChecked ? '✓' : '';
+  checkBpa();
+}
+function checkBpa() {
+  const btn = document.getElementById('bpaBtn');
+  btn.disabled = !(bpaChecked && sigHasData);
+}
+
+// ── ENVOYER BPA ──
+async function envoyerBpa() {
+  if (!sigHasData) { document.getElementById('sigReq').classList.add('show'); return; }
+  document.getElementById('sigReq').classList.remove('show');
+  document.getElementById('sendingOverlay').classList.add('show');
+
+  const d = devisData;
+  const lignes = d.items.map(i => `${i.emoji} ${i.nom} × ${i.qty} ${i.unit} = ${fmt(i.subtotal)}`).join('\n');
+  const now = new Date();
+
+  // 1. Formspree → Thierry
+  try {
+    await fetch(FORMSPREE, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body: JSON.stringify({
+        _subject:`[PSE+ BON POUR ACCORD ✅] ${d.nom} — ${d.type_evt} — ${fmt(d.total)}`,
+        type:'BON POUR ACCORD',
+        numero_devis:d.refNum,
+        client_nom:d.nom, client_tel:d.tel, client_email:d.email,
+        evenement:d.type_evt,
+        date_evenement:new Date(d.date_evt+'T00:00').toLocaleDateString('fr-FR'),
+        lieu:d.lieu||'-', nb_personnes:d.nb_pers||'-',
+        articles:lignes, total:fmt(d.total),
+        statut:'✅ BON POUR ACCORD — Signature électronique recueillie',
+        date_validation:now.toLocaleString('fr-FR'),
+      })
+    });
+  } catch(e) { console.warn(e); }
+
+  // 2. EmailJS → Client
+  const emailBody = `Bonjour ${d.nom},\n\nVotre bon pour accord a bien été enregistré.\n\nDevis N° : ${d.refNum}\nÉvénement : ${d.type_evt} — ${new Date(d.date_evt+'T00:00').toLocaleDateString('fr-FR')}\n${d.lieu ? 'Lieu : '+d.lieu+'\n' : ''}\nARTICLES :\n${lignes}\n\nTOTAL ESTIMATIF : ${fmt(d.total)}\n\nThierry Arthur vous contactera très prochainement pour confirmer la disponibilité et l'acompte de 30%.\n\nPSE+ · Piment Sweet Events\n+590 690 64 52 51 · Thierryarthur971@gmail.com`;
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email:d.email, to_name:d.nom, from_name:'PSE+ · Piment Sweet Events',
+      reply_to:'Thierryarthur971@gmail.com',
+      subject:`Votre devis PSE+ confirmé — ${d.refNum}`,
+      message:emailBody, devis_num:d.refNum, total:fmt(d.total),
+    });
+  } catch(e) { console.warn(e); }
+
+  document.getElementById('sendingOverlay').classList.remove('show');
+  document.getElementById('ovDetail').innerHTML =
+    `<strong>📋 ${d.refNum}</strong><br>👤 ${d.nom} · ${d.email}<br>🎉 ${d.type_evt} · ${new Date(d.date_evt+'T00:00').toLocaleDateString('fr-FR')}<br>💰 Total : ${fmt(d.total)}<br><br>✅ Email de confirmation envoyé à <strong>${d.email}</strong><br>📬 Thierry a été notifié et vous contactera sous 2h.`;
+  document.getElementById('successOverlay').classList.add('show');
+}
+</script>
+</body>
+</html>
